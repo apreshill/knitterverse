@@ -1,5 +1,5 @@
 ---
-title: "Knitting with wordbankr"
+title: "Knitting hats, scarves, and mittens"
 author: "Alison Hill"
 output:
   distill::distill_article:
@@ -55,7 +55,7 @@ Focus on word production only.
 
 ```{r}
 # then get instrument data for those items
-knitted_data <- get_instrument_data(
+word_items <- get_instrument_data(
   language = "English (American)",
   form = "WS",
   items = my_knits$item_id,
@@ -69,13 +69,13 @@ knitted_data <- get_instrument_data(
 ```
 
 ```{r}
-knitted_data
+word_items
 ```
 
 ## Check licenses
 
 ```{r}
-knitted_data %>% 
+word_items %>% 
   distinct(license)
 ```
 
@@ -85,32 +85,36 @@ knitted_data %>%
 What proportion of kids at each age produce each word?
 
 ```{r}
-knitted_summary <- knitted_data %>% 
+word_summary <- word_items %>% 
   group_by(age, word) %>%
   summarise(kids_produce = sum(produces, na.rm = TRUE),
-            kids_respond = n_distinct(data_id),
-            prop_produce = kids_produce / kids_respond) %>% 
+            kids_n = n_distinct(data_id),
+            prop_produce = kids_produce / kids_n) %>% 
   ungroup() %>% 
   # grab even ages only
   filter(age %% 2 == 0) %>% 
-  select(age, word, prop_produce, kids_respond)
+  select(age, word, prop_produce, kids_n)
 ```
+
+```{r}
+word_summary
+```
+
 
 ## Explore ages
 
 ```{r ages}
-ggplot(knitted_summary, aes(x = age, y = kids_respond)) +
-  geom_col(fill = "cadetblue")
+ggplot(word_summary, aes(x = age, y = kids_n)) +
+  geom_col(fill = "cadetblue", alpha = .5)
 ```
+
 
 
 ## Sample plot
 
 ```{r barplot}
 words <-
-  ggplot(knitted_summary, aes(x = age, 
-                         y = prop_produce, 
-                         color = word)) + 
+  ggplot(word_summary, aes(x = age, y = prop_produce, color = word)) + 
   geom_smooth(se = FALSE, lwd = .5) +
   geom_point(size = 2)  +
   labs(x = "Age (months)", y = "Proportion of Children Producing") 
@@ -177,9 +181,9 @@ knitted_langs %>%
 Now let's export both data frames.
 
 ```{r}
-write_csv(knitted_data, 
-          here::here("data","knitted_data.csv"))
-write_csv(knitted_summary, 
-          here::here("data","knitted_summary.csv"))
+write_csv(word_items, 
+          here::here("data","word_items.csv"))
+write_csv(word_summary, 
+          here::here("data","word_summary.csv"))
 ```
 

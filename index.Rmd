@@ -4,14 +4,14 @@ author: "Alison Hill"
 output:
   distill::distill_article:
     toc: true
-    toc_float: true
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(warning=FALSE, message=FALSE)
+knitr::opts_chunk$set(warning=FALSE, message=FALSE, fig.path="figs/")
 ```
 
 ## Data
+
 http://langcog.github.io/wordbankr/
 
 ## Packages
@@ -93,8 +93,16 @@ knitted_summary <- knitted_data %>%
   ungroup() %>% 
   # grab even ages only
   filter(age %% 2 == 0) %>% 
-  select(age, word, prop_produce)
+  select(age, word, prop_produce, kids_respond)
 ```
+
+## Explore ages
+
+```{r ages}
+ggplot(knitted_summary, aes(x = age, y = kids_respond)) +
+  geom_col(fill = "cadetblue")
+```
+
 
 ## Sample plot
 
@@ -111,11 +119,26 @@ words
 
 ## Color palettes
 
-```{r}
+```{r saguaro}
 words + scale_color_paletteer_d("nationalparkcolors::Saguaro")
-words + scale_color_paletteer_d("nationalparkcolors::Everglades")
+```
+
+```{r badlands}
 words + scale_color_paletteer_d("nationalparkcolors::Badlands")
 ```
+
+```{r picasso}
+words + scale_color_paletteer_d("lisa::PabloPicasso")
+```
+
+```{r chagall}
+words + scale_color_paletteer_d("lisa::MarcChagall")
+```
+
+```{r milkmaid}
+words + scale_color_paletteer_d("dutchmasters::milkmaid")
+```
+
 
 
 
@@ -123,11 +146,11 @@ words + scale_color_paletteer_d("nationalparkcolors::Badlands")
 
 Could be great for parameters, or facetting?
 
-```{r}
+```{r cache=TRUE}
 knitted_langs <- get_crossling_data(uni_lemmas = knitted_things)
 ```
 
-```{r}
+```{r cache=TRUE}
 knitted_langs %>% 
   # grouped already? that is tricky
   ungroup() %>% 
@@ -145,10 +168,10 @@ knitted_langs %>%
 
 Now let's export both data frames.
 
-```{r eval=FALSE}
-write_csv(knitted_data, here::here("data",
-                                       "knitted_data.csv"))
-write_csv(knitted_summary, here::here("data",
-                                        "knitted_summary.csv"))
+```{r}
+write_csv(knitted_data, 
+          here::here("data","knitted_data.csv"))
+write_csv(knitted_summary, 
+          here::here("data","knitted_summary.csv"))
 ```
 

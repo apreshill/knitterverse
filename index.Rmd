@@ -1,0 +1,154 @@
+---
+title: "Knitting with wordbankr"
+author: "Alison Hill"
+output:
+  distill::distill_article:
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning=FALSE, message=FALSE)
+```
+
+## Data
+http://langcog.github.io/wordbankr/
+
+## Packages
+
+```{r}
+library(tidyverse)
+library(wordbankr)
+library(here)
+library(paletteer)
+ggplot2::theme_set(theme_minimal())
+```
+
+## Getting knitted things
+
+```{r}
+clothing <- get_item_data(
+  language = "English (American)", 
+  form = "WS"
+  ) %>%
+  filter(category == "clothing")
+
+# selecting hat / scarf / mittens
+knitted_things <- c("hat", "scarf", "mittens")
+
+# get the items for my selected knitted things
+my_knits <- get_item_data(
+  language = "English (American)", 
+  form = "WS"
+  ) %>%
+  filter(definition %in% knitted_things) 
+```
+
+```{r}
+my_knits
+```
+
+
+## Get the instrument data for those knitted things
+
+Focus on word production only.
+
+```{r}
+# then get instrument data for those items
+knitted_data <- get_instrument_data(
+  language = "English (American)",
+  form = "WS",
+  items = my_knits$item_id,
+  administrations = TRUE,
+  iteminfo = TRUE
+  ) %>% 
+  mutate(produces = value == "produces") %>% 
+  select(-value) %>% 
+  drop_na(produces) %>% 
+  rename(word = uni_lemma) 
+```
+
+```{r}
+knitted_data
+```
+
+## Check licenses
+
+```{r}
+knitted_data %>% 
+  distinct(license)
+```
+
+
+## Summarize
+
+What proportion of kids at each age produce each word?
+
+```{r}
+knitted_summary <- knitted_data %>% 
+  group_by(age, word) %>%
+  summarise(kids_produce = sum(produces, na.rm = TRUE),
+            kids_respond = n_distinct(data_id),
+            prop_produce = kids_produce / kids_respond) %>% 
+  ungroup() %>% 
+  # grab even ages only
+  filter(age %% 2 == 0) %>% 
+  select(age, word, prop_produce)
+```
+
+## Sample plot
+
+```{r barplot}
+words <-
+  ggplot(knitted_summary, aes(x = age, 
+                         y = prop_produce, 
+                         color = word)) + 
+  geom_smooth(se = FALSE, lwd = .5) +
+  geom_point(size = 2)  +
+  labs(x = "Age (months)", y = "Proportion of Children Producing") 
+words
+```
+
+## Color palettes
+
+```{r}
+words + scale_color_paletteer_d("nationalparkcolors::Saguaro")
+words + scale_color_paletteer_d("nationalparkcolors::Everglades")
+words + scale_color_paletteer_d("nationalparkcolors::Badlands")
+```
+
+
+
+## Crosslinguistic data
+
+Could be great for parameters, or facetting?
+
+```{r}
+knitted_langs <- get_crossling_data(uni_lemmas = knitted_things)
+```
+
+```{r}
+knitted_langs %>% 
+  # grouped already? that is tricky
+  ungroup() %>% 
+  distinct(language)
+
+# oof item ids are different
+knitted_langs %>% 
+  # grouped already? that is tricky
+  ungroup() %>% 
+  filter(uni_lemma == "scarf") %>% 
+  distinct(item_id, language)
+```
+
+## Exporting
+
+Now let's export both data frames.
+
+```{r eval=FALSE}
+write_csv(knitted_data, here::here("data",
+                                       "knitted_data.csv"))
+write_csv(knitted_summary, here::here("data",
+                                        "knitted_summary.csv"))
+```
+

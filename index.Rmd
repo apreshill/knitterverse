@@ -119,6 +119,14 @@ words
 
 ## Color palettes
 
+```{r beyonce}
+words + scale_color_paletteer_d("beyonce::X18")
+```
+
+```{r colorblind}
+words + scale_color_paletteer_d("colorblindr::OkabeIto")
+```
+
 ```{r saguaro}
 words + scale_color_paletteer_d("nationalparkcolors::Saguaro")
 ```

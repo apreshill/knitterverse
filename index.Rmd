@@ -104,7 +104,8 @@ word_summary
 ## Explore ages
 
 ```{r ages}
-ggplot(word_summary, aes(x = age, y = kids_n)) +
+ggplot(filter(word_summary, word == "scarf"), 
+       aes(x = age, y = kids_n)) +
   geom_col(fill = "cadetblue", alpha = .5)
 ```
 

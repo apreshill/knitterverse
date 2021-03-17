@@ -1,4 +1,4 @@
-data_id,num_item_id,age,comprehension,production,language,form,birth_order,ethnicity,sex,zygosity,norming,mom_ed,longitudinal,source_name,license,item_id,definition,type,category,lexical_category,lexical_class,word,complexity_category,produces
+data_id,num_item_id,age,comprehension,production,language,form,birth_order,ethnicity,sex,zygosity,norming,mom_ed,longitudinal,source_name,license,item_id,definition,type,category,lexical_category,lexical_class,uni_lemma,complexity_category,produces
 129242,165,27,497,497,English (American),WS,Fourth,Hispanic,Female,NA,TRUE,Some Secondary,FALSE,Marchman (Norming),CC-BY,item_165,hat,word,clothing,nouns,nouns,hat,,TRUE
 129243,165,21,369,369,English (American),WS,Second,White,Female,NA,TRUE,Secondary,FALSE,Marchman (Norming),CC-BY,item_165,hat,word,clothing,nouns,nouns,hat,,TRUE
 129244,165,26,190,190,English (American),WS,Fourth,White,Female,NA,TRUE,College,FALSE,Marchman (Norming),CC-BY,item_165,hat,word,clothing,nouns,nouns,hat,,TRUE

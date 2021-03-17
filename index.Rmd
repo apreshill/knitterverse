@@ -21,6 +21,7 @@ library(tidyverse)
 library(wordbankr)
 library(here)
 library(paletteer)
+library(prismatic)
 ggplot2::theme_set(theme_minimal())
 ```
 
@@ -49,13 +50,13 @@ my_knits
 ```
 
 
-## Get the instrument data for those knitted things
+## Get word production data
 
-Focus on word production only.
+Can I get median total vocab size? 
 
 ```{r}
 # then get instrument data for those items
-word_items <- get_instrument_data(
+words <- get_instrument_data(
   language = "English (American)",
   form = "WS",
   items = my_knits$item_id,
@@ -64,18 +65,20 @@ word_items <- get_instrument_data(
   ) %>% 
   mutate(produces = value == "produces") %>% 
   select(-value) %>% 
-  drop_na(produces) %>% 
-  rename(word = uni_lemma) 
+  drop_na(produces) %>%
+  filter(type == "word", !is.na(uni_lemma))
 ```
 
 ```{r}
-word_items
+words
 ```
+
+
 
 ## Check licenses
 
 ```{r}
-word_items %>% 
+words %>% 
   distinct(license)
 ```
 
@@ -85,15 +88,15 @@ word_items %>%
 What proportion of kids at each age produce each word?
 
 ```{r}
-word_summary <- word_items %>% 
-  group_by(age, word) %>%
+word_summary <- words %>% 
+  group_by(age, uni_lemma) %>%
   summarise(kids_produce = sum(produces, na.rm = TRUE),
             kids_n = n_distinct(data_id),
             prop_produce = kids_produce / kids_n) %>% 
   ungroup() %>% 
   # grab even ages only
   filter(age %% 2 == 0) %>% 
-  select(age, word, prop_produce, kids_n)
+  select(age, lemma = uni_lemma, prop_produce, kids_n)
 ```
 
 ```{r}
@@ -101,58 +104,117 @@ word_summary
 ```
 
 
-## Explore ages
+## Age distribution
 
 ```{r ages}
-ggplot(filter(word_summary, word == "scarf"), 
+ggplot(filter(word_summary, lemma == "scarf"), 
        aes(x = age, y = kids_n)) +
-  geom_col(fill = "cadetblue", alpha = .5)
+  geom_col(fill = "darkcyan", alpha = .5, width = 2)
 ```
 
 
 
-## Sample plot
+## Line plot
 
-```{r barplot}
-words <-
-  ggplot(word_summary, aes(x = age, y = prop_produce, color = word)) + 
+```{r lineplot}
+words_line <-
+  ggplot(word_summary, aes(x = age, y = prop_produce, color = lemma)) + 
   geom_smooth(se = FALSE, lwd = .5) +
   geom_point(size = 2)  +
   labs(x = "Age (months)", y = "Proportion of Children Producing") 
-words
+words_line
 ```
 
-## Color palettes
-
-```{r beyonce}
-words + scale_color_paletteer_d("beyonce::X18")
-```
-
-```{r colorblind}
-words + scale_color_paletteer_d("colorblindr::OkabeIto")
-```
+## Play with color on line plots
 
 ```{r saguaro}
-words + scale_color_paletteer_d("nationalparkcolors::Saguaro")
+words_line + scale_color_paletteer_d("nationalparkcolors::Saguaro")
 ```
 
 ```{r badlands}
-words + scale_color_paletteer_d("nationalparkcolors::Badlands")
+words_line + scale_color_paletteer_d("nationalparkcolors::Badlands")
 ```
 
 ```{r picasso}
-words + scale_color_paletteer_d("lisa::PabloPicasso")
+words_line + scale_color_paletteer_d("lisa::PabloPicasso")
 ```
 
 ```{r chagall}
-words + scale_color_paletteer_d("lisa::MarcChagall")
+words_line + scale_color_paletteer_d("lisa::MarcChagall")
 ```
 
-```{r milkmaid}
-words + scale_color_paletteer_d("dutchmasters::milkmaid")
+## Check colorblindness
+
+```{r}
+paletteer_d("nationalparkcolors::Badlands", n = 3) %>%
+  prismatic::check_color_blindness()
 ```
 
+```{r}
+paletteer_d("nationalparkcolors::Saguaro", n = 3) %>%
+  prismatic::check_color_blindness()
+```
 
+```{r}
+paletteer_d("colorblindr::OkabeIto", n = 3) %>%
+  prismatic::check_color_blindness()
+```
+
+## Better for colorblind
+
+```{r colorblind}
+words_line + scale_color_paletteer_d("colorblindr::OkabeIto")
+```
+
+## Play with more plots
+
+### Bar plot
+
+```{r barplot}
+ggplot(word_summary, aes(x = age, y = prop_produce)) +
+  geom_col(aes(fill = lemma), alpha = .8, 
+           position = "identity") +
+  scale_fill_paletteer_d("colorblindr::OkabeIto") 
+```
+
+### Facetted bar plot
+
+```{r facet}
+ggplot(word_summary, aes(x = age, y = prop_produce)) +
+  geom_col(aes(fill = lemma), alpha = .8) +
+  scale_fill_paletteer_d("colorblindr::OkabeIto", guide = FALSE) + 
+  facet_wrap(~lemma)
+```
+
+### Dodged bar plot
+
+```{r dodgeplot}
+ggplot(word_summary, aes(x = age, y = prop_produce)) +
+  geom_col(aes(fill = lemma), alpha = .8, position="dodge") +
+  scale_fill_paletteer_d("colorblindr::OkabeIto") 
+```
+
+### Rose chart
+
+```{r}
+words_rose <-
+  ggplot(word_summary, 
+         aes(x = age, y = prop_produce, fill = lemma)) +
+  geom_col(width = 2) +
+  coord_polar() 
+```
+
+```{r rosesaguaro}
+words_rose + 
+  scale_fill_paletteer_d("nationalparkcolors::Saguaro") + 
+  theme(axis.text.y = element_blank())
+```
+
+```{r roseeverglades}
+words_rose + 
+  scale_fill_paletteer_d("nationalparkcolors::Everglades") + 
+  theme(axis.text.y = element_blank())
+```
 
 
 ## Crosslinguistic data
@@ -167,14 +229,15 @@ knitted_langs <- get_crossling_data(uni_lemmas = knitted_things)
 knitted_langs %>% 
   # grouped already? that is tricky
   ungroup() %>% 
+  filter(n_children > 100) %>% 
   distinct(language)
 
 # oof item ids are different
 knitted_langs %>% 
   # grouped already? that is tricky
   ungroup() %>% 
-  filter(uni_lemma == "scarf") %>% 
-  distinct(item_id, language)
+  filter(n_children > 100) %>% 
+  distinct(item_id, language, uni_lemma, definition)
 ```
 
 ## Exporting
@@ -182,8 +245,8 @@ knitted_langs %>%
 Now let's export both data frames.
 
 ```{r}
-write_csv(word_items, 
-          here::here("data","word_items.csv"))
+write_csv(words, 
+          here::here("data","words.csv"))
 write_csv(word_summary, 
           here::here("data","word_summary.csv"))
 ```
